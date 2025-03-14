@@ -9,6 +9,6 @@
 #define MAXOPBLOCKS  10  // max # of blocks any FS op writes
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*4)  // size of disk block cache !! Увеличиваем для лучшей производительности при работе с большими файлами
-#define FSSIZE       20000  // size of file system in blocks !! Увеличиваем с 2000 до 20000, чтобы хватило места для больших файлов
+#define FSSIZE       20000  // size of file system in blocks !! Увеличиваем с 2000 до 200000, чтобы хватило места для больших файлов
 #define MAXPATH      128   // maximum file path name
 #define USERSTACK    1     // user stack pages

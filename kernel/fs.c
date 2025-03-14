@@ -421,15 +421,24 @@ bmap(struct inode *ip, uint bn)
   // Добавляем поддержку double indirect
   if(bn < NDINDIRECT){
     // Загрузка double indirect block
-    if((addr = ip->addrs[NDIRECT+1]) == 0)
-      ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
+    if((addr = ip->addrs[NDIRECT+1]) == 0){
+      addr = balloc(ip->dev);
+      if(addr == 0)
+        return 0;
+      ip->addrs[NDIRECT+1] = addr;
+    }
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
     uint index1 = bn / NINDIRECT;
     uint index2 = bn % NINDIRECT;
     
     if((addr = a[index1]) == 0){
-      a[index1] = addr = balloc(ip->dev);
+      addr = balloc(ip->dev);
+      if(addr == 0) {
+        brelse(bp);
+        return 0;
+      }
+      a[index1] = addr;
       log_write(bp);
     }
     brelse(bp);
@@ -438,7 +447,12 @@ bmap(struct inode *ip, uint bn)
     bp2 = bread(ip->dev, addr);
     a = (uint*)bp2->data;
     if((addr = a[index2]) == 0){
-      a[index2] = addr = balloc(ip->dev);
+      addr = balloc(ip->dev);
+      if(addr == 0) {
+        brelse(bp2);
+        return 0;
+      }
+      a[index2] = addr;
       log_write(bp2);
     }
     brelse(bp2);
@@ -485,11 +499,14 @@ itrunc(struct inode *ip)
         bp2 = bread(ip->dev, a[i]);
         a2 = (uint*)bp2->data;
         for(j = 0; j < NINDIRECT; j++){
-          if(a2[j])
+          if(a2[j]) {
             bfree(ip->dev, a2[j]);
+            a2[j] = 0;
+          }
         }
         brelse(bp2);
         bfree(ip->dev, a[i]);
+        a[i] = 0;
       }
     }
     brelse(bp);
